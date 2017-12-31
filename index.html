@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Template • TodoMVC</title>
+    <link rel="stylesheet" href="node_modules/todomvc-common/base.css">
+    <link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+
+<body ng-app="myApp" ng-controller="demoCtrl">
+    <section class="todoapp">
+        <header class="header">
+            <h1>todos</h1>
+            <!-- 当回车的时候触发form表单提交事件，实现数据的添加 -->
+            <form ng-submit="add()">
+                <input ng-model="newTask" class="new-todo" placeholder="还有哪些任务需要完成?" autofocus>
+            </form>
+
+        </header>
+        <section class="main">
+            <input id="toggle-all" class="toggle-all" type="checkbox">
+            <label for="toggle-all">Mark all as complete</label>
+            <ul class="todo-list">
+                <li ng-class="{completed:item.isCompleted,editing:isEditing===item.id}" ng-repeat="item in taskList">
+                    <div class="view">
+                        <input class="toggle" type="checkbox" checked ng-model="item.isCompleted">
+                        <label ng-bind="item.name" ng-dblclick="edit(item.id)"></label>
+                        <button class="destroy" ng-click="del(item.id)"></button>
+                    </div>
+                    <!-- <input class="edit" value="Create a TodoMVC template"> -->
+                    <input class="edit" ng-model="item.name" ng-blur="blur()">
+                </li>
+
+            </ul>
+        </section>
+        <footer class="footer">
+            <span class="todo-count"><strong>0</strong> item left</span>
+            <ul class="filters">
+                <li>
+                    <a class="selected" href="#/">All</a>
+                </li>
+                <li>
+                    <a href="#/active">Active</a>
+                </li>
+                <li>
+                    <a href="#/completed">Completed</a>
+                </li>
+            </ul>
+            <button class="clear-completed">Clear completed</button>
+        </footer>
+    </section>
+    <footer class="info">
+        <p>Double-click to edit a todo</p>
+        <p>Template by <a href="http://sindresorhus.com">Sindre Sorhus</a></p>
+        <p>Created by <a href="http://todomvc.com">you</a></p>
+        <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+    </footer>
+    <script src="node_modules/todomvc-common/base.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
+<script src="../../node_modules/angular/angular.min.js"></script>
+<script>
+    // 渲染 增加  删除  修改
+    angular.module('myApp', [])
+        .controller('demoCtrl', function($scope) {
+            // $scope.taskList = [{
+            //         id: 1,
+            //         name: '抽烟',
+            //         isCompleted: true
+            //     }, {
+            //         id: 2,
+            //         name: '烫头',
+            //         isCompleted: false
+            //     }, {
+            //         id: 3,
+            //         name: '喝酒',
+            //         isCompleted: true
+            //     }, ]
+            $scope.taskList = JSON.parse(localStorage.getItem('todos')) || []
+
+
+            //当我们回车的时候，要把DOM表单里面的值添加回数组当中
+            // 逻辑：获取数据，添加到数组，清空输入框，===>输入之前得先判断，去掉前后的空格后内容为空的不能添加
+            $scope.newTask = ''
+            $scope.add = function() {
+                if (!$scope.newTask.trim()) return;
+                $scope.taskList.push({
+                    id: Math.random(),
+                    name: $scope.newTask,
+                    isCompleted: false
+                })
+                $scope.newTask = '';
+                $scope.save()
+            }
+
+            // 点击删除的事件
+            // 业务逻辑：定义一个过滤器将id（点击时获取本条数据的id传入）相等的过滤掉，只留下id不相等的（即不需要删除的），然后将值赋回去重新渲染
+            $scope.del = function(id) {
+                var taskTmp = $scope.taskList.filter(function(item, index) {
+                    if (item.id === id) {
+                        return false
+                    }
+                    return true
+                })
+                $scope.taskList = taskTmp
+                $scope.save()
+            }
+
+            // 修改数据,当两个id相等的时候，为true，变为修改状态
+            // 失去焦点时，变成不可编辑状态
+            // 将数据保存到localstorage
+
+            var isEditing = -1
+            $scope.edit = function(id) {
+                $scope.isEditing = id
+            }
+
+            $scope.blur = function() {
+                $scope.isEditing = -1
+                $scope.save()
+            }
+
+            // 添加删除改变的时候都需要将数据保存到本地---save
+            // 将数据保存到localstorage---获取数据，存储数据（注意数据的转换）
+            $scope.save = function() {
+                // JSON.stringify  转为字符串，原来的方式
+                var str = angular.toJson($scope.taskList);
+                localStorage.setItem('todos', str);
+            }
+
+        })
+</script>
